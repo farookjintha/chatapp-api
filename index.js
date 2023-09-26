@@ -6,7 +6,10 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const db = require("./db/connect");
 
+const cookieParser = require("cookie-parser");
+
 const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/user.routes");
 
 db();
 
@@ -21,6 +24,7 @@ const io = new Server(server, {
 });
 
 app.use(express.json()); // Middleware to parse req into JSON
+app.use(cookieParser());
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -33,6 +37,7 @@ app.get("/", (req, res) => {
 
 // Attaching custom middlewares
 app.use("/api", authRoutes);
+app.use("/api", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 
@@ -42,6 +47,7 @@ io.on("connection", (socket) => {
     console.log(`User ${socket.id} has joined the room.`);
   });
   socket.on("send-message", (data) => {
+    console.log("DATA SENT: ", data);
     socket.to(data.room).emit("receive-message", data);
   });
   socket.on("disconnect", () => {
